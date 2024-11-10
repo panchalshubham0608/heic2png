@@ -30,7 +30,7 @@ def convert_heic_to_png(heic_file, output_folder):
         print(f"Error converting {heic_file}: {e}")
         return None
 
-def convert_all_heic_in_directory(input_directory, output_directory):
+def convert_all_heic_in_directory(input_directory, output_directory, delete_heic=False):
     # Check if the input directory exists
     if not os.path.isdir(input_directory):
         print(f"Error: The directory {input_directory} does not exist.")
@@ -60,9 +60,17 @@ def convert_all_heic_in_directory(input_directory, output_directory):
         if output_file:
             # Print the progress (x/total - %done)
             print(f"\rConverting {heic_file} to {output_file} ({idx}/{total_files})", end='')
-    
-    # show a message
-    print(f"Conversion completed!")
+
+            # If delete_heic is True, delete the original HEIC file
+            if delete_heic:
+                try:
+                    os.remove(heic_file_path)
+                    # print(f" - Deleted {heic_file}", end='')
+                except Exception as e:
+                    print(f" - Error deleting {heic_file}: {e}", end='')
+
+    # Show a message when conversion is completed
+    print(f"\nConversion completed!")
 
 def main():
     # Create the parser
@@ -70,13 +78,20 @@ def main():
 
     # Add command-line arguments for input and output directories
     parser.add_argument("input_directory", help="Directory containing HEIC files to convert.")
-    parser.add_argument("output_directory", help="Directory where PNG files will be saved.")
-
+    parser.add_argument("output_directory", nargs="?", help="Directory where PNG files will be saved.")
+    
+    # Add the --delete_heic flag (optional)
+    parser.add_argument("--delete_heic", action="store_true", help="Delete the original HEIC files after conversion.")
+    
     # Parse the arguments
     args = parser.parse_args()
 
-    # Convert HEIC files to PNG in the specified directories
-    convert_all_heic_in_directory(args.input_directory, args.output_directory)
+    # If no output directory is provided, use the input directory as the output directory
+    if not args.output_directory:
+        args.output_directory = args.input_directory
+
+    # Convert HEIC files to PNG in the specified directories, and delete HEIC files if the flag is set
+    convert_all_heic_in_directory(args.input_directory, args.output_directory, delete_heic=args.delete_heic)
 
 if __name__ == "__main__":
     main()
